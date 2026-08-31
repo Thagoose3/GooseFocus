@@ -165,7 +165,11 @@ export class FocusTimer {
     }
   }
 
-  reset() {
+  reset(saveSession = true) {
+    if (saveSession && this.elapsedSec >= 60) {
+      this.finishSession();
+      return;
+    }
     this.pause();
     this.isIdlePaused = false;
     this.initFromSettings();
@@ -314,7 +318,7 @@ export class FocusTimer {
     if (this.mode === 'pomodoro') {
       this.skip();
     } else {
-      this.reset();
+      this.reset(false);
     }
   }
 }
