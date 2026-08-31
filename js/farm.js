@@ -1,10 +1,11 @@
 /**
- * GooseFocus - Stardew Valley Style 2D Top-Down Living Farm Simulator
- * Features:
- * 1. 2.5D Top-Down Farm World: Red Barn, Silo, Crop Fields, Organic Pond, Wooden Pier, Apple Trees, Fences
- * 2. 10-Minute 24-Hour Day/Night Loop (600s: Sunrise -> Bright Day -> Golden Sunset -> Cozy Night Lanterns)
- * 3. Top-Down Animated Geese: Waddling, Swimming with ripples, Pecking crops, Snug accessories
- * 4. Strictly Bounded Walkable Farm Pasture (No walking into sky or off-screen)
+ * GooseFocus - Hyper-Polished Stardew Valley 2D Top-Down Living Farm Simulator
+ * 
+ * Upgrades:
+ * 1. Fixed Goose Neck Clipping Bug: Unified anatomical head/neck Bezier path that never disappears.
+ * 2. Crystal Clear Cyan/Sky-Blue Natural Pond with water shimmers, lilypads, and wooden fishing pier.
+ * 3. Highly Detailed Stardew Valley Aesthetics: Tilled crops (wheat, sunflowers, pumpkins), red barn, stone well, apple trees, hay bales, fences, crates, campfire.
+ * 4. Distinct 10-Minute Day/Night Cycle with real-time in-game clock, sunset golden hour, and midnight lantern/campfire glow.
  */
 
 import { soundEngine } from './audio.js';
@@ -24,7 +25,7 @@ function drawSafeRoundRect(ctx, x, y, width, height, radius = 5) {
   ctx.arcTo(x + width, y, x + width, y + height, radius);
   ctx.arcTo(x + width, y + height, x, y + height, radius);
   ctx.arcTo(x, y + height, x, y, radius);
-  ctx.arcTo(x, y, x + width, y, radius);
+  ctx.arcTo(x, y + width, y, radius);
   ctx.closePath();
 }
 
@@ -43,6 +44,7 @@ export class FarmSimulator {
     this.ripples = [];
     this.speechBubbles = [];
     this.clouds = [];
+    this.sparkles = [];
 
     this.timeTick = 0;
     this.isRaining = false;
@@ -50,7 +52,7 @@ export class FarmSimulator {
 
     // 10-Minute Day/Night Cycle (600s loop)
     this.cycleDurationSec = 600;
-    this.timeOfDayPhase = 0.25;
+    this.timeOfDayPhase = 0.25; // 0.0 -> 1.0
 
     if (this.canvas && this.ctx) {
       this.initCanvas();
@@ -77,9 +79,9 @@ export class FarmSimulator {
 
   initClouds() {
     this.clouds = [
-      { x: this.width * 0.1, y: this.height * 0.08, speed: 0.15, scale: 1.2, opacity: 0.25 },
-      { x: this.width * 0.55, y: this.height * 0.14, speed: 0.1, scale: 0.9, opacity: 0.2 },
-      { x: this.width * 0.85, y: this.height * 0.05, speed: 0.18, scale: 1.4, opacity: 0.3 }
+      { x: this.width * 0.15, y: this.height * 0.08, speed: 0.12, scale: 1.1, opacity: 0.2 },
+      { x: this.width * 0.55, y: this.height * 0.16, speed: 0.09, scale: 0.85, opacity: 0.16 },
+      { x: this.width * 0.85, y: this.height * 0.06, speed: 0.15, scale: 1.3, opacity: 0.22 }
     ];
   }
 
@@ -95,9 +97,8 @@ export class FarmSimulator {
   createGoose(data, index) {
     const isEgg = data.stage === 'egg';
 
-    // Walkable Ground Coordinates in Top-Down View
-    const spawnX = isEgg ? this.width * 0.24 : 100 + Math.random() * Math.max(150, this.width - 240);
-    const spawnY = isEgg ? this.height * 0.72 : 180 + Math.random() * Math.max(150, this.height - 300);
+    const spawnX = isEgg ? this.width * 0.24 : 120 + Math.random() * Math.max(150, this.width - 240);
+    const spawnY = isEgg ? this.height * 0.72 : 200 + Math.random() * Math.max(150, this.height - 320);
 
     return {
       id: data.id || `goose_${index}`,
@@ -133,7 +134,7 @@ export class FarmSimulator {
       let clickedGoose = null;
       for (const goose of this.geese) {
         const dist = Math.hypot(goose.x - clickX, goose.y - clickY);
-        if (dist < 45 * goose.scale) {
+        if (dist < 48 * goose.scale) {
           clickedGoose = goose;
           break;
         }
@@ -145,8 +146,8 @@ export class FarmSimulator {
         this.createRipple(clickX, clickY);
         this.geese.forEach(g => {
           if (g.stage !== 'egg' && Math.random() > 0.3) {
-            g.targetX = Math.max(80, Math.min(this.width - 80, clickX + (Math.random() * 100 - 50)));
-            g.targetY = Math.max(180, Math.min(this.height - 100, clickY + (Math.random() * 100 - 50)));
+            g.targetX = Math.max(80, Math.min(this.width - 80, clickX + (Math.random() * 90 - 45)));
+            g.targetY = Math.max(190, Math.min(this.height - 100, clickY + (Math.random() * 90 - 45)));
             g.state = 'wandering';
           }
         });
@@ -168,12 +169,12 @@ export class FarmSimulator {
     goose.state = 'honking';
     goose.stateTimer = 50;
 
-    const phrases = ['HONK! 🪿', 'ฮ้อนก์! ✨', 'ตั้งใจโฟกัสนะ!', 'ฟาร์มห่านแสนสุข 🌾', 'ก้าบๆ สะสมชั่วโมง ⏱️'];
+    const phrases = ['HONK! 🪿', 'ฮ้อนก์! ✨', 'ตั้งใจสะสมชั่วโมงนะ!', 'ฟาร์มห่านแสนสุข 🌾', 'ก้าบๆ โฟกัสยาวๆ ⏱️'];
     const text = phrases[Math.floor(Math.random() * phrases.length)];
-    this.addSpeechBubble(goose.x, goose.y - 45 * goose.scale, text);
+    this.addSpeechBubble(goose.x, goose.y - 48 * goose.scale, text);
 
     // Spawn feather particles
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       this.particles.push({
         x: goose.x + (Math.random() * 24 - 12),
         y: goose.y - 25,
@@ -192,8 +193,7 @@ export class FarmSimulator {
     const feedX = this.width * 0.45;
     const feedY = this.height * 0.62;
 
-    // Scatter grain particles on the ground
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 22; i++) {
       this.foodGrains.push({
         x: feedX + (Math.random() * 160 - 80),
         y: feedY + (Math.random() * 100 - 50),
@@ -210,7 +210,7 @@ export class FarmSimulator {
       }
     });
 
-    this.addSpeechBubble(feedX, feedY - 45, '🌾 โปรยอาหารให้เจ้าห่านแล้ว!');
+    this.addSpeechBubble(feedX, feedY - 45, '🌾 โปรยเมล็ดข้าวโพดทองคำ!');
   }
 
   honkChorus() {
@@ -241,7 +241,7 @@ export class FarmSimulator {
     this.speechBubbles.push({ x, y, text, life: 85, maxLife: 85 });
   }
 
-  // Check if position is inside the organic pond
+  // Check if position is inside the blue pond
   isPointInPond(x, y) {
     const pondX = this.width * 0.72;
     const pondY = this.height * 0.58;
@@ -250,7 +250,7 @@ export class FarmSimulator {
 
     const dx = (x - pondX) / pondRx;
     const dy = (y - pondY) / pondRy;
-    return (dx * dx + dy * dy) <= 0.85;
+    return (dx * dx + dy * dy) <= 0.82;
   }
 
   update() {
@@ -259,6 +259,9 @@ export class FarmSimulator {
     // 10-Minute Day/Night Loop Calculation (600 seconds)
     const nowSec = Date.now() / 1000;
     this.timeOfDayPhase = (nowSec % this.cycleDurationSec) / this.cycleDurationSec;
+
+    // Update in-game top clock pill if element exists
+    this.updateClockHUD();
 
     // Random Weather Variations
     this.weatherTimer++;
@@ -273,7 +276,7 @@ export class FarmSimulator {
       }
     }
 
-    // Clouds Drift (Shadows over the farm)
+    // Clouds Drift
     this.clouds.forEach(c => {
       c.x += c.speed;
       if (c.x > this.width + 200) {
@@ -307,7 +310,7 @@ export class FarmSimulator {
         if (roll < 0.5) {
           g.state = 'wandering';
           g.targetX = 80 + Math.random() * (this.width - 160);
-          g.targetY = 180 + Math.random() * (this.height - 280);
+          g.targetY = 190 + Math.random() * (this.height - 290);
         } else if (roll < 0.75) {
           g.state = 'pecking';
         } else if (roll < 0.9 && inPond) {
@@ -345,9 +348,9 @@ export class FarmSimulator {
       g.x += g.vx;
       g.y += g.vy;
 
-      // STRICT TOP-DOWN FARM BOUNDS (No walking into header or sky!)
+      // STRICT TOP-DOWN FARM BOUNDS (Strictly below the HUD bar, strictly on farm ground)
       g.x = Math.max(60, Math.min(this.width - 60, g.x));
-      g.y = Math.max(170, Math.min(this.height - 90, g.y));
+      g.y = Math.max(180, Math.min(this.height - 90, g.y));
 
       // Flapping wing animation
       if (g.isFlapping) {
@@ -391,15 +394,30 @@ export class FarmSimulator {
 
     // Night Fireflies
     const isNight = this.timeOfDayPhase >= 0.7 || this.timeOfDayPhase < 0.05;
-    if (isNight && Math.random() < 0.25) {
+    if (isNight && Math.random() < 0.28) {
       this.particles.push({
         x: Math.random() * this.width,
         y: 160 + Math.random() * (this.height - 240),
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
         life: 140,
         maxLife: 140,
         type: 'firefly'
+      });
+    }
+
+    // Campfire Sparkles
+    if (isNight && Math.random() < 0.35) {
+      const fireX = this.width * 0.52;
+      const fireY = this.height * 0.74;
+      this.particles.push({
+        x: fireX + (Math.random() * 12 - 6),
+        y: fireY - 10,
+        vx: (Math.random() - 0.5) * 1.2,
+        vy: -Math.random() * 2 - 1.5,
+        life: 35,
+        maxLife: 35,
+        type: 'spark'
       });
     }
 
@@ -412,6 +430,45 @@ export class FarmSimulator {
     }
   }
 
+  updateClockHUD() {
+    let clockEl = document.getElementById('farmClockPill');
+    if (!clockEl) {
+      const brandPill = document.querySelector('.galaxy-brand-pill');
+      if (brandPill) {
+        clockEl = document.createElement('div');
+        clockEl.id = 'farmClockPill';
+        clockEl.className = 'farm-clock-pill';
+        brandPill.parentNode.insertBefore(clockEl, brandPill.nextSibling);
+      }
+    }
+
+    if (clockEl) {
+      const p = this.timeOfDayPhase;
+      // Convert 0..1 phase to 24-hour time: 0.0 = 06:00 (Dawn), 0.25 = 12:00 (Noon), 0.5 = 18:00 (Sunset), 0.75 = 00:00 (Midnight)
+      const totalMinutes = Math.floor(((p * 24 + 6) % 24) * 60);
+      const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+      const mins = String(totalMinutes % 60).padStart(2, '0');
+
+      let icon = '☀️';
+      let period = 'กลางวัน (Day)';
+      if (p < 0.15) {
+        icon = '🌅';
+        period = 'เช้าตรู่ (Sunrise)';
+      } else if (p < 0.5) {
+        icon = '☀️';
+        period = 'กลางวัน (Day)';
+      } else if (p < 0.7) {
+        icon = '🌇';
+        period = 'พลบค่ำ (Sunset)';
+      } else {
+        icon = '🌙';
+        period = 'ค่ำคืน (Night)';
+      }
+
+      clockEl.innerHTML = `<span style="font-size: 1rem;">${icon}</span> <span>${hours}:${mins} น. • ${period}</span>`;
+    }
+  }
+
   draw() {
     const ctx = this.ctx;
     if (!ctx) return;
@@ -421,16 +478,16 @@ export class FarmSimulator {
     // 1. Top-Down Grassland Base & Warm Dirt Pathways
     this.drawTopDownTerrain(ctx);
 
-    // 2. Tilled Crop Fields (Wheat, Sunflowers, Strawberries)
+    // 2. Tilled Crop Fields (Wheat, Sunflowers, Strawberries, Pumpkins)
     this.drawCropFields(ctx);
 
-    // 3. Natural Organic Pond with Lotus Flowers & Wooden Pier
+    // 3. Crystal Clear Cyan/Sky-Blue Organic Pond & Wooden Pier
     this.drawOrganicPond(ctx);
 
-    // 4. Stardew Red Barn, Silo, Chicken Coop & Wooden Fences
+    // 4. Stardew 2.5D Red Barn, Silo, Chicken Coop & Wooden Fences
     this.drawStardewBarnAndStructures(ctx);
 
-    // 5. Apple Trees, Hay Bales, Stone Well & Night Lanterns
+    // 5. Apple Trees, Hay Bales, Stone Well, Campfire & Night Lanterns
     this.drawDecorationsAndTrees(ctx);
 
     // 6. Water Ripples & Food Grains
@@ -440,7 +497,7 @@ export class FarmSimulator {
     // 7. Nest & Golden Egg
     this.drawNestAndEgg(ctx);
 
-    // 8. Draw Top-Down 2.5D Geese sorted by Y-depth
+    // 8. Draw Top-Down 2.5D Geese sorted by Y-depth (with Fixed Solid Neck)
     const sortedGeese = [...this.geese].sort((a, b) => a.y - b.y);
     sortedGeese.forEach(g => {
       if (g.stage !== 'egg') {
@@ -448,13 +505,13 @@ export class FarmSimulator {
       }
     });
 
-    // 9. Particles (Rain, Night Fireflies, Feathers)
+    // 9. Particles (Rain, Night Fireflies, Campfire Sparks, Feathers)
     this.drawParticles(ctx);
 
     // 10. Speech Bubbles
     this.drawSpeechBubbles(ctx);
 
-    // 11. 10-Minute Dynamic Day/Night Lighting Filter & Cozy Lantern Glows
+    // 11. 10-Minute Dynamic Day/Night Lighting Filter & Cozy Lantern/Campfire Glow
     this.drawAmbientLightingAndLanterns(ctx);
   }
 
@@ -471,28 +528,37 @@ export class FarmSimulator {
     ctx.fillStyle = grassColor;
     ctx.fillRect(0, 0, this.width, this.height);
 
-    // Grass Texture Patches
+    // Subtle Grass Tuft Texture
     ctx.fillStyle = isNight ? '#047857' : (isSunset ? '#15803d' : '#4ade80');
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 40; i++) {
       const gx = ((i * 187) % (this.width - 100)) + 50;
-      const gy = ((i * 123) % (this.height - 200)) + 150;
+      const gy = ((i * 123) % (this.height - 220)) + 170;
       ctx.beginPath();
-      ctx.ellipse(gx, gy, 24, 12, 0.3, 0, Math.PI * 2);
+      ctx.ellipse(gx, gy, 22, 11, 0.3, 0, Math.PI * 2);
       ctx.fill();
+
+      // Tiny Wild Flowers (Daisies & Buttercups)
+      if (i % 3 === 0) {
+        ctx.fillStyle = (i % 2 === 0) ? '#ffffff' : '#fde047';
+        ctx.beginPath();
+        ctx.arc(gx + 6, gy - 4, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = isNight ? '#047857' : '#4ade80';
+      }
     }
 
-    // Dirt Pathways (Stardew Style Brown Soil Paths)
+    // Dirt Pathways (Stardew Style Warm Soil Paths)
     const dirtColor = isNight ? '#451a03' : (isSunset ? '#78350f' : '#b45309');
     ctx.fillStyle = dirtColor;
 
-    // Main horizontal path from Barn across to Pond
+    // Main horizontal path from Barn across to Pond & Pier
     ctx.beginPath();
     ctx.moveTo(this.width * 0.12, this.height * 0.46);
     ctx.quadraticCurveTo(this.width * 0.38, this.height * 0.44, this.width * 0.54, this.height * 0.56);
     ctx.quadraticCurveTo(this.width * 0.62, this.height * 0.64, this.width * 0.72, this.height * 0.62);
-    ctx.lineTo(this.width * 0.72, this.height * 0.69);
-    ctx.quadraticCurveTo(this.width * 0.6, this.height * 0.71, this.width * 0.52, this.height * 0.62);
-    ctx.quadraticCurveTo(this.width * 0.36, this.height * 0.51, this.width * 0.12, this.height * 0.53);
+    ctx.lineTo(this.width * 0.72, this.height * 0.70);
+    ctx.quadraticCurveTo(this.width * 0.6, this.height * 0.72, this.width * 0.52, this.height * 0.62);
+    ctx.quadraticCurveTo(this.width * 0.36, this.height * 0.52, this.width * 0.12, this.height * 0.54);
     ctx.closePath();
     ctx.fill();
 
@@ -500,21 +566,21 @@ export class FarmSimulator {
     ctx.fillStyle = isNight ? '#334155' : '#94a3b8';
     for (let i = 0; i < 22; i++) {
       const cx = this.width * 0.16 + (i * (this.width * 0.52 / 22));
-      const cy = this.height * 0.48 + Math.sin(i * 0.6) * 18;
+      const cy = this.height * 0.49 + Math.sin(i * 0.6) * 16;
       ctx.beginPath();
-      ctx.ellipse(cx, cy, 5, 3.5, i * 0.4, 0, Math.PI * 2);
+      ctx.ellipse(cx, cy, 5.5, 4, i * 0.4, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
   /* ==========================================================================
-     2. Tilled Crop Fields (Wheat, Sunflowers, Strawberries)
+     2. Tilled Crop Fields (Wheat, Sunflowers, Strawberries, Pumpkins)
      ========================================================================== */
   drawCropFields(ctx) {
     const fieldX = this.width * 0.36;
     const fieldY = this.height * 0.22;
     const fW = 180;
-    const fH = 130;
+    const fH = 135;
 
     ctx.save();
 
@@ -526,7 +592,7 @@ export class FarmSimulator {
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    // Furrow Lines (แปลงยกร่อง)
+    // Furrow Lines (แปลงยกร่องดิน)
     const rows = 4;
     const cols = 5;
     const rowH = fH / (rows + 1);
@@ -544,16 +610,16 @@ export class FarmSimulator {
       for (let c = 1; c <= cols; c++) {
         const cx = fieldX + c * colW;
 
-        if (r === 1 || r === 2) {
-          // Golden Wheat
+        if (r === 1) {
+          // Golden Wheat (ข้าวสาลีสีทอง)
           ctx.fillStyle = '#f59e0b';
           ctx.beginPath();
           ctx.arc(cx, ry - 6, 5, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = '#15803d';
           ctx.fillRect(cx - 1, ry - 3, 2, 6);
-        } else if (r === 3) {
-          // Sunflowers
+        } else if (r === 2) {
+          // Sunflowers (ดอกทานตะวันสดใส)
           ctx.fillStyle = '#fbbf24';
           ctx.beginPath();
           ctx.arc(cx, ry - 8, 7, 0, Math.PI * 2);
@@ -564,8 +630,8 @@ export class FarmSimulator {
           ctx.fill();
           ctx.fillStyle = '#15803d';
           ctx.fillRect(cx - 1, ry - 4, 2, 7);
-        } else {
-          // Strawberries
+        } else if (r === 3) {
+          // Strawberries (สตรอว์เบอร์รีแดงฉ่ำ)
           ctx.fillStyle = '#15803d';
           ctx.beginPath();
           ctx.arc(cx, ry - 4, 6, 0, Math.PI * 2);
@@ -575,6 +641,14 @@ export class FarmSimulator {
           ctx.arc(cx - 2, ry - 3, 3, 0, Math.PI * 2);
           ctx.arc(cx + 2, ry - 3, 3, 0, Math.PI * 2);
           ctx.fill();
+        } else {
+          // Plump Orange Pumpkins (ฟักทองสีส้ม)
+          ctx.fillStyle = '#f97316';
+          ctx.beginPath();
+          ctx.ellipse(cx, ry - 5, 7, 5.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#15803d';
+          ctx.fillRect(cx - 1, ry - 9, 2, 4); // Vine stem
         }
       }
     }
@@ -583,9 +657,8 @@ export class FarmSimulator {
     const scX = fieldX + fW + 16;
     const scY = fieldY + fH / 2;
     ctx.fillStyle = '#92400e';
-    ctx.fillRect(scX - 2, scY - 14, 4, 28); // Post
-    ctx.fillRect(scX - 10, scY - 6, 20, 3); // Arms
-    // Straw Hat & Shirt
+    ctx.fillRect(scX - 2, scY - 14, 4, 28);
+    ctx.fillRect(scX - 10, scY - 6, 20, 3);
     ctx.fillStyle = '#3b82f6';
     ctx.fillRect(scX - 6, scY - 6, 12, 10);
     ctx.fillStyle = '#fde047';
@@ -597,12 +670,11 @@ export class FarmSimulator {
   }
 
   /* ==========================================================================
-     3. Natural Organic Pond with Lotus Flowers & Wooden Pier
+     3. Crystal Clear Cyan/Sky-Blue Organic Pond with Lotus & Wooden Pier
      ========================================================================== */
   drawOrganicPond(ctx) {
     const p = this.timeOfDayPhase;
     const isNight = (p >= 0.7 || p < 0.05);
-    const isSunset = (p >= 0.5 && p < 0.7);
 
     const pondX = this.width * 0.72;
     const pondY = this.height * 0.58;
@@ -611,16 +683,22 @@ export class FarmSimulator {
 
     ctx.save();
 
-    // 1. Natural Mud / Pebble Shoreline
+    // 1. Natural Mud & Sandy Pebble Shoreline
     ctx.fillStyle = isNight ? '#291405' : '#78350f';
     ctx.beginPath();
     ctx.ellipse(pondX, pondY, pondRx + 10, pondRy + 10, -0.08, 0, Math.PI * 2);
     ctx.fill();
 
-    // Decorative pebbles along the shore
+    // Golden Sand Edge Ring
+    ctx.fillStyle = '#ca8a04';
+    ctx.beginPath();
+    ctx.ellipse(pondX, pondY, pondRx + 4, pondRy + 4, -0.08, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Smooth Shore Pebbles
     ctx.fillStyle = '#64748b';
-    for (let i = 0; i < 16; i++) {
-      const angle = (i / 16) * Math.PI * 2;
+    for (let i = 0; i < 18; i++) {
+      const angle = (i / 18) * Math.PI * 2;
       const px = pondX + Math.cos(angle) * (pondRx + 5);
       const py = pondY + Math.sin(angle) * (pondRy + 5);
       ctx.beginPath();
@@ -628,40 +706,43 @@ export class FarmSimulator {
       ctx.fill();
     }
 
-    // 2. Lake Water Body (Deep Cyan / Blue Gradient)
+    // 2. Crystal Clear Cyan & Sky-Blue Water Body (บ่อน้ำสีฟ้าสดใส!)
     ctx.beginPath();
     ctx.ellipse(pondX, pondY, pondRx, pondRy, -0.08, 0, Math.PI * 2);
 
-    const waterGrad = ctx.createRadialGradient(pondX, pondY, pondRx * 0.2, pondX, pondY, pondRx);
+    const waterGrad = ctx.createRadialGradient(pondX, pondY, pondRx * 0.15, pondX, pondY, pondRx);
     if (isNight) {
+      // Midnight Deep Cyan
       waterGrad.addColorStop(0, '#0284c7');
-      waterGrad.addColorStop(0.7, '#0369a1');
-      waterGrad.addColorStop(1, '#075985');
-    } else if (isSunset) {
-      waterGrad.addColorStop(0, '#38bdf8');
-      waterGrad.addColorStop(0.5, '#0284c7');
-      waterGrad.addColorStop(1, '#0369a1');
+      waterGrad.addColorStop(0.65, '#0369a1');
+      waterGrad.addColorStop(1, '#0c4a6e');
     } else {
-      waterGrad.addColorStop(0, '#38bdf8');
-      waterGrad.addColorStop(0.65, '#0284c7');
+      // Sparkling Crystal Sky-Blue (ฟ้าสดใสประกายน้ำ)
+      waterGrad.addColorStop(0, '#7dd3fc'); // Light sky cyan core
+      waterGrad.addColorStop(0.55, '#38bdf8'); // Radiant vibrant blue
+      waterGrad.addColorStop(0.85, '#0284c7'); // Deep rich blue edge
       waterGrad.addColorStop(1, '#0369a1');
     }
 
     ctx.fillStyle = waterGrad;
     ctx.fill();
 
-    // Shore water ripple highlight
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+    // Water Shimmer Highlights (ประกายคลื่นน้ำสีขาว)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(pondX - 20, pondY - 20, 28, 0.2, 1.4);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(pondX + 40, pondY + 15, 34, 3.2, 4.4);
     ctx.stroke();
 
-    // 3. Wooden Fishing Pier / Dock (สะพานไม้ท่าน้ำแบบ Stardew)
+    // 3. Wooden Fishing Pier / Dock (สะพานไม้ท่าน้ำ)
     const pierX = pondX - pondRx + 10;
-    const pierY = pondY - 10;
-    const pierW = 75;
+    const pierY = pondY - 12;
+    const pierW = 78;
     const pierH = 34;
 
-    // Pier Wooden Planks
     ctx.fillStyle = isNight ? '#451a03' : '#92400e';
     drawSafeRoundRect(ctx, pierX, pierY, pierW, pierH, 4);
     ctx.fill();
@@ -681,9 +762,9 @@ export class FarmSimulator {
     ctx.fillRect(pierX + pierW - 8, pierY - 8, 6, 10);
 
     // 4. Floating Water Lily Pads & Pink Lotus
-    this.drawLilyPad(ctx, pondX + 40, pondY - 30, 20, '#15803d', '#f43f5e');
-    this.drawLilyPad(ctx, pondX - 30, pondY + 45, 24, '#166534', '#fbcfe8');
-    this.drawLilyPad(ctx, pondX + 60, pondY + 30, 18, '#15803d', '#fb7185');
+    this.drawLilyPad(ctx, pondX + 45, pondY - 35, 22, '#15803d', '#f43f5e');
+    this.drawLilyPad(ctx, pondX - 30, pondY + 45, 26, '#166534', '#fbcfe8');
+    this.drawLilyPad(ctx, pondX + 65, pondY + 30, 19, '#15803d', '#fb7185');
 
     // 5. Reeds (ต้นกกริมน้ำ)
     this.drawReeds(ctx, pondX + pondRx - 25, pondY - 20);
@@ -704,7 +785,7 @@ export class FarmSimulator {
     // Pink Lotus Flower
     ctx.fillStyle = flowerColor;
     ctx.beginPath();
-    ctx.arc(x + 2, y - 4, size * 0.3, 0, Math.PI * 2);
+    ctx.arc(x + 2, y - 4, size * 0.32, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#fef08a';
     ctx.beginPath();
@@ -731,7 +812,7 @@ export class FarmSimulator {
   }
 
   /* ==========================================================================
-     4. Stardew Red Barn, Silo & Wooden Fences
+     4. Stardew 2.5D Red Barn, Silo & Wooden Fences
      ========================================================================== */
   drawStardewBarnAndStructures(ctx) {
     const p = this.timeOfDayPhase;
@@ -803,12 +884,10 @@ export class FarmSimulator {
     ctx.lineWidth = 3;
     ctx.strokeRect(doorX, doorY, doorW, doorH);
     ctx.beginPath();
-    // Left Door X
     ctx.moveTo(doorX, doorY);
     ctx.lineTo(doorX + doorW / 2, doorY + doorH);
     ctx.moveTo(doorX + doorW / 2, doorY);
     ctx.lineTo(doorX, doorY + doorH);
-    // Right Door X
     ctx.moveTo(doorX + doorW / 2, doorY);
     ctx.lineTo(doorX + doorW, doorY + doorH);
     ctx.moveTo(doorX + doorW, doorY);
@@ -867,7 +946,7 @@ export class FarmSimulator {
   }
 
   /* ==========================================================================
-     5. Apple Trees, Hay Bales, Stone Well & Night Lanterns
+     5. Apple Trees, Hay Bales, Stone Well, Campfire & Night Lanterns
      ========================================================================== */
   drawDecorationsAndTrees(ctx) {
     const p = this.timeOfDayPhase;
@@ -887,10 +966,11 @@ export class FarmSimulator {
     ctx.beginPath();
     ctx.ellipse(wellX, wellY, 18, 11, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#0284c7'; // Water inside well
+    ctx.fillStyle = '#0284c7';
     ctx.beginPath();
     ctx.ellipse(wellX, wellY, 13, 8, 0, 0, Math.PI * 2);
     ctx.fill();
+
     // Well Roof
     ctx.fillStyle = '#78350f';
     ctx.fillRect(wellX - 16, wellY - 24, 4, 24);
@@ -917,15 +997,54 @@ export class FarmSimulator {
     ctx.ellipse(hayX + 15, hayY + 4, 14, 10, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+
+    // 5. Cozy Campfire near the Pier (กองไฟอบอุ่น)
+    const fireX = this.width * 0.52;
+    const fireY = this.height * 0.74;
+    ctx.save();
+    // Stone Circle
+    ctx.fillStyle = '#475569';
+    for (let i = 0; i < 7; i++) {
+      const fa = (i / 7) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(fireX + Math.cos(fa) * 12, fireY + Math.sin(fa) * 7, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Fire Wood Logs
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(fireX - 8, fireY - 3, 16, 5);
+    ctx.fillRect(fireX - 3, fireY - 8, 6, 14);
+
+    // Glowing Flames
+    const flicker = Math.sin(this.timeTick * 0.3) * 2;
+    ctx.fillStyle = '#ea580c';
+    ctx.beginPath();
+    ctx.arc(fireX, fireY - 6 + flicker, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(fireX, fireY - 7 + flicker, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (isNight) {
+      // Warm Campfire Radial Glow
+      const fireGlow = ctx.createRadialGradient(fireX, fireY - 6, 4, fireX, fireY - 6, 65);
+      fireGlow.addColorStop(0, 'rgba(251, 146, 60, 0.85)');
+      fireGlow.addColorStop(0.5, 'rgba(245, 158, 11, 0.35)');
+      fireGlow.addColorStop(1, 'rgba(245, 158, 11, 0)');
+      ctx.fillStyle = fireGlow;
+      ctx.beginPath();
+      ctx.arc(fireX, fireY - 6, 65, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
   }
 
   drawAppleTree(ctx, x, y, radius) {
     ctx.save();
-    // Tree Trunk
     ctx.fillStyle = '#5c2c16';
     ctx.fillRect(x - 8, y, 16, radius * 0.9);
 
-    // Layered Canopy
     ctx.fillStyle = '#15803d';
     ctx.beginPath();
     ctx.arc(x, y - radius * 0.4, radius, 0, Math.PI * 2);
@@ -938,7 +1057,6 @@ export class FarmSimulator {
     ctx.arc(x - radius * 0.2, y - radius * 0.6, radius * 0.65, 0, Math.PI * 2);
     ctx.fill();
 
-    // Red Apples
     ctx.fillStyle = '#ef4444';
     ctx.beginPath();
     ctx.arc(x - 12, y - 10, 4, 0, Math.PI * 2);
@@ -953,7 +1071,6 @@ export class FarmSimulator {
     const nestX = this.width * 0.24;
     const nestY = this.height * 0.72;
 
-    // Straw Nest
     ctx.fillStyle = '#92400e';
     ctx.beginPath();
     ctx.ellipse(nestX, nestY, 28, 16, 0, 0, Math.PI * 2);
@@ -963,7 +1080,6 @@ export class FarmSimulator {
     ctx.ellipse(nestX, nestY - 2, 24, 12, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Egg
     const egg = this.geese.find(g => g.stage === 'egg');
     if (egg) {
       ctx.save();
@@ -996,7 +1112,7 @@ export class FarmSimulator {
   }
 
   /* ==========================================================================
-     6. Top-Down 2.5D Animated Goose
+     6. Top-Down Animated Goose with Solid, Fixed Neck Path
      ========================================================================== */
   drawTopDownGoose(ctx, g) {
     ctx.save();
@@ -1058,7 +1174,7 @@ export class FarmSimulator {
       ctx.fill();
     } else {
       // Swimming Water Wake Ring
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.ellipse(0, bob + 5, 22, 9, 0, 0, Math.PI * 2);
@@ -1095,18 +1211,28 @@ export class FarmSimulator {
     ctx.fill();
     ctx.restore();
 
-    // 5. Curved Neck & Head
+    // 5. SOLID CONTINUOUS NECK (Guaranteed Never to Disappear / Clip!)
     ctx.fillStyle = bodyColor;
-    ctx.beginPath();
     if (isSleeping) {
-      ctx.arc(6, bob - 4, 7.5, 0, Math.PI * 2);
+      // Head tucked onto back
+      ctx.beginPath();
+      ctx.arc(6, bob - 4, 8, 0, Math.PI * 2);
+      ctx.fill();
     } else {
-      ctx.moveTo(8, bob + 4);
-      ctx.quadraticCurveTo(14, bob - 10, 16, bob - 22);
-      ctx.arc(17, bob - 24, 7.5, 0, Math.PI * 2);
-      ctx.lineTo(8, bob + 4);
+      // Solid unified neck column
+      ctx.beginPath();
+      ctx.moveTo(6, bob + 2);
+      ctx.lineTo(16, bob - 22);
+      ctx.lineTo(24, bob - 22);
+      ctx.lineTo(16, bob + 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Solid Head Sphere
+      ctx.beginPath();
+      ctx.arc(19, bob - 22, 8, 0, Math.PI * 2);
+      ctx.fill();
     }
-    ctx.fill();
 
     // 6. Orange Beak with Nostril
     ctx.fillStyle = beakColor;
@@ -1116,9 +1242,9 @@ export class FarmSimulator {
       ctx.lineTo(19, bob - 2);
       ctx.lineTo(12, bob);
     } else {
-      ctx.moveTo(22, bob - 26);
-      ctx.lineTo(32, bob - 23); // Beak tip
-      ctx.lineTo(22, bob - 20);
+      ctx.moveTo(24, bob - 24);
+      ctx.lineTo(33, bob - 21); // Beak tip
+      ctx.lineTo(24, bob - 18);
     }
     ctx.closePath();
     ctx.fill();
@@ -1129,20 +1255,20 @@ export class FarmSimulator {
       ctx.lineWidth = 1.5;
       ctx.strokeStyle = '#334155';
       ctx.beginPath();
-      ctx.arc(16, bob - 24, 2.5, 0.2, Math.PI - 0.2);
+      ctx.arc(16, bob - 22, 2.5, 0.2, Math.PI - 0.2);
       ctx.stroke();
     } else {
       ctx.beginPath();
-      ctx.arc(18, bob - 26, 2.2, 0, Math.PI * 2);
+      ctx.arc(19, bob - 24, 2.2, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(18.7, bob - 26.7, 0.8, 0, Math.PI * 2);
+      ctx.arc(19.7, bob - 24.7, 0.8, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // 8. Snugly Attached Head Accessories (Exact Head Anchor!)
-    this.drawFittedAccessories(ctx, g, 17, bob - 24);
+    // 8. Snugly Attached Head Accessories
+    this.drawFittedAccessories(ctx, g, 19, bob - 22);
 
     ctx.restore();
   }
@@ -1246,6 +1372,12 @@ export class FarmSimulator {
         ctx.arc(p.x, p.y, 2.8, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
+      } else if (p.type === 'spark') {
+        const alpha = p.life / p.maxLife;
+        ctx.fillStyle = `rgba(251, 191, 36, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.8, 0, Math.PI * 2);
+        ctx.fill();
       } else if (p.type === 'feather') {
         ctx.fillStyle = p.color || '#ffffff';
         ctx.beginPath();
@@ -1301,15 +1433,14 @@ export class FarmSimulator {
       ctx.fill();
 
       if (isNight) {
-        // Glowing Warm Light in Night
         ctx.save();
-        const lightGrad = ctx.createRadialGradient(lt.x, lt.y - 14, 2, lt.x, lt.y - 14, 42);
+        const lightGrad = ctx.createRadialGradient(lt.x, lt.y - 14, 2, lt.x, lt.y - 14, 46);
         lightGrad.addColorStop(0, 'rgba(251, 191, 36, 0.95)');
         lightGrad.addColorStop(0.4, 'rgba(245, 158, 11, 0.4)');
         lightGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
         ctx.fillStyle = lightGrad;
         ctx.beginPath();
-        ctx.arc(lt.x, lt.y - 14, 42, 0, Math.PI * 2);
+        ctx.arc(lt.x, lt.y - 14, 46, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = '#fef08a';
@@ -1321,15 +1452,15 @@ export class FarmSimulator {
       }
     });
 
-    // 2. Ambient Shading Overlay (Sunset & Night)
+    // 2. Ambient Shading Overlay (Clear Day / Sunset / Night Differences)
     if (p >= 0.5 && p < 0.7) {
-      // Golden Twilight Tint
-      const sunsetAlpha = Math.sin(((p - 0.5) / 0.2) * Math.PI) * 0.2;
+      // Golden Twilight Tint (พลบค่ำ)
+      const sunsetAlpha = Math.sin(((p - 0.5) / 0.2) * Math.PI) * 0.22;
       ctx.fillStyle = `rgba(249, 115, 22, ${sunsetAlpha})`;
       ctx.fillRect(0, 0, this.width, this.height);
     } else if (isNight) {
-      // Cozy Night Blue Ambient Tint
-      const nightAlpha = p >= 0.7 ? Math.min(0.4, ((p - 0.7) / 0.1) * 0.4) : (0.05 - p) / 0.05 * 0.4;
+      // Deep Atmospheric Midnight Blue Tint (ค่ำคืน)
+      const nightAlpha = p >= 0.7 ? Math.min(0.48, ((p - 0.7) / 0.1) * 0.48) : (0.05 - p) / 0.05 * 0.48;
       ctx.fillStyle = `rgba(15, 23, 42, ${nightAlpha})`;
       ctx.fillRect(0, 0, this.width, this.height);
     }

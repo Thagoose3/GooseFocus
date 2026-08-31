@@ -113,6 +113,25 @@
   gap: 0.4rem;
 }
 
+/* Day/Night Farm Clock Pill */
+.farm-clock-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  font-family: var(--font-rounded);
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-full);
+  box-shadow: var(--card-shadow);
+  pointer-events: auto;
+  user-select: none;
+}
+
 .hud-pill-btn {
   background: var(--card-bg);
   backdrop-filter: blur(16px);
