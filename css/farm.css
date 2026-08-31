@@ -1,0 +1,278 @@
+/* ==========================================================================
+   GooseFocus - Floating Galaxy HUD & Canvas Styles
+   ========================================================================== */
+
+/* Floating Top HUD Bar */
+.galaxy-top-hud {
+  position: absolute;
+  top: 1.1rem;
+  left: 1.5rem;
+  right: 1.5rem;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.hud-left-group, .hud-center-group, .hud-right-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  pointer-events: auto;
+}
+
+/* Brand Pill */
+.brand-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-full);
+  box-shadow: var(--card-shadow);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.brand-pill:hover {
+  transform: scale(1.04);
+}
+
+.brand-icon-wrap {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-svg {
+  width: 32px;
+  height: 32px;
+}
+
+.honk-bubble {
+  position: absolute;
+  top: -10px;
+  right: -12px;
+  background: var(--accent-gold);
+  color: #78350f;
+  font-family: var(--font-rounded);
+  font-weight: 900;
+  font-size: 0.65rem;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  opacity: 0;
+  transform: scale(0.5);
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.brand-pill:active .honk-bubble {
+  opacity: 1;
+  transform: scale(1.1) translateY(-3px);
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-family: var(--font-rounded);
+  font-size: 0.95rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.badge-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: var(--primary);
+  color: #ffffff;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+}
+
+.brand-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+/* Farm Quick Action Pills */
+.farm-quick-pills {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.hud-pill-btn {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  font-family: var(--font-rounded);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-full);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.hud-pill-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+/* Farmer Status Center Pill */
+.farmer-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-full);
+  box-shadow: var(--card-shadow);
+}
+
+.tier-icon {
+  font-size: 1.1rem;
+}
+
+.farmer-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 105px;
+}
+
+.status-title-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.tier-name {
+  color: var(--primary);
+}
+
+.farmer-lvl {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.mini-exp-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+[data-theme="night"] .mini-exp-track,
+[data-theme="cosmic"] .mini-exp-track {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.mini-exp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent-gold));
+  border-radius: var(--radius-full);
+}
+
+/* Top Right Icon Buttons */
+.hud-icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  cursor: pointer;
+  position: relative;
+  box-shadow: var(--card-shadow);
+  transition: all var(--transition-fast);
+}
+
+.hud-icon-btn:hover {
+  transform: scale(1.08) translateY(-2px);
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.highlight-gold {
+  border-color: var(--accent-gold);
+}
+
+.highlight-gold:hover {
+  background: var(--accent-gold-light);
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+.btn-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--accent-gold);
+  color: #78350f;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.btn-pulse-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: var(--primary);
+  border-radius: 50%;
+  display: none;
+  animation: pulse-ring 1.5s infinite;
+}
+
+.btn-pulse-dot.active {
+  display: block;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 var(--primary-glow); }
+  70% { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* Theme Dropdown Wrap */
+.theme-dropdown-wrap {
+  position: relative;
+}
+
+@media (max-width: 900px) {
+  .hud-center-group, .farm-quick-pills {
+    display: none;
+  }
+}

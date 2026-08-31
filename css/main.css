@@ -1,0 +1,136 @@
+/* ==========================================================================
+   GooseFocus - Main Design System & Full-Screen Layout
+   Thagoose Galaxy & Living Farm Style
+   ========================================================================== */
+
+:root {
+  /* Font Families */
+  --font-main: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-rounded: 'Nunito', 'Prompt', sans-serif;
+  --font-mono: 'Space Grotesk', monospace;
+
+  /* Day Theme (Default) */
+  --bg-gradient: linear-gradient(180deg, #bae6fd 0%, #e0f2fe 45%, #bbf7d0 100%);
+  --card-bg: rgba(255, 255, 255, 0.82);
+  --card-border: rgba(255, 255, 255, 0.9);
+  --card-shadow: 0 10px 30px -5px rgba(16, 185, 129, 0.18), 0 4px 6px -2px rgba(0, 0, 0, 0.06);
+  
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-light: rgba(16, 185, 129, 0.15);
+  --primary-glow: rgba(16, 185, 129, 0.45);
+
+  --accent-gold: #f59e0b;
+  --accent-gold-light: #fef3c7;
+  --accent-gold-glow: rgba(245, 158, 11, 0.4);
+
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --accent-rose: #f43f5e;
+  --accent-teal: #14b8a6;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Sunset Theme */
+[data-theme="sunset"] {
+  --bg-gradient: linear-gradient(180deg, #fbcfe8 0%, #fed7aa 50%, #ea580c 100%);
+  --card-bg: rgba(255, 241, 242, 0.85);
+  --card-border: rgba(254, 205, 211, 0.95);
+  --card-shadow: 0 10px 30px -5px rgba(244, 63, 94, 0.2);
+  --text-primary: #1e1b4b;
+  --text-secondary: #4c1d95;
+  --primary: #f43f5e;
+  --primary-hover: #e11d48;
+  --primary-light: rgba(244, 63, 94, 0.15);
+  --primary-glow: rgba(244, 63, 94, 0.4);
+}
+
+/* Night Theme */
+[data-theme="night"] {
+  --bg-gradient: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #064e3b 100%);
+  --card-bg: rgba(15, 23, 42, 0.86);
+  --card-border: rgba(51, 65, 85, 0.85);
+  --card-shadow: 0 10px 40px -5px rgba(0, 0, 0, 0.6), 0 0 20px rgba(52, 211, 153, 0.15);
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --primary: #34d399;
+  --primary-hover: #10b981;
+  --primary-light: rgba(52, 211, 153, 0.18);
+  --primary-glow: rgba(52, 211, 153, 0.5);
+}
+
+/* Cosmic Theme */
+[data-theme="cosmic"] {
+  --bg-gradient: radial-gradient(circle at top, #3b0764 0%, #030712 60%, #0f172a 100%);
+  --card-bg: rgba(17, 24, 39, 0.88);
+  --card-border: rgba(147, 51, 234, 0.45);
+  --card-shadow: 0 10px 40px -5px rgba(147, 51, 234, 0.35), 0 0 20px rgba(56, 189, 248, 0.25);
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #a855f7;
+  --primary: #c084fc;
+  --primary-hover: #a855f7;
+  --primary-light: rgba(192, 132, 252, 0.2);
+  --primary-glow: rgba(192, 132, 252, 0.55);
+}
+
+/* Full-Screen Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  font-family: var(--font-main);
+  background: var(--bg-gradient);
+  color: var(--text-primary);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fullscreen-app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.fullscreen-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  display: block;
+}
+
+/* Utilities */
+.text-gold { color: var(--accent-gold) !important; }
+.text-emerald { color: var(--primary) !important; }
+.text-blue { color: var(--accent-blue) !important; }
+.text-purple { color: var(--accent-purple) !important; }
+.text-orange { color: #f97316 !important; }
+
+.hidden {
+  display: none !important;
+}

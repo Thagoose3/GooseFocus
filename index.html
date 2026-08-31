@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="day">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GooseFocus 🪿🌾 — ฟาร์มห่านสะสมชั่วโมง & Ranking</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  
+  <!-- Google Fonts: Prompt, Nunito & Space Grotesk -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Prompt:wght@300;400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/farm.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body class="fullscreen-body">
+  <div id="app" class="fullscreen-app">
+    
+    <!-- ============================================== -->
+    <!-- 1. FULL-SCREEN 2D LIVE GOOSE FARM CANVAS       -->
+    <!-- ============================================== -->
+    <canvas id="farmCanvas" class="fullscreen-canvas"></canvas>
+
+    <!-- ============================================== -->
+    <!-- 2. FLOATING TOP HUD INTERFACE (Galaxy Style)   -->
+    <!-- ============================================== -->
+    <header class="galaxy-top-hud">
+      
+      <!-- Top Left: Brand Logo & Farm Quick Actions -->
+      <div class="hud-left-group">
+        <a href="#" class="brand-pill" id="logoHonkBtn" title="คลิกให้เจ้าห่านร้อง Honk!">
+          <div class="brand-icon-wrap">
+            <svg viewBox="0 0 100 100" class="logo-svg">
+              <ellipse cx="48" cy="60" rx="26" ry="20" fill="#ffffff"/>
+              <ellipse cx="48" cy="62" rx="22" ry="16" fill="#f1f5f9"/>
+              <path d="M 24 56 Q 14 50 18 62 Q 22 66 28 64 Z" fill="#ffffff"/>
+              <path d="M 36 56 C 36 50 50 48 56 58 C 60 62 54 70 42 68 Z" fill="#e2e8f0"/>
+              <path d="M 60 58 Q 70 46 68 28 Q 66 18 74 18 Q 80 18 80 32 Q 76 50 64 64 Z" fill="#ffffff"/>
+              <path d="M 76 22 L 92 25 Q 88 30 76 28 Z" fill="#f59e0b"/>
+              <circle cx="72" cy="24" r="2.5" fill="#0f172a"/>
+              <path d="M 68 16 L 71 8 L 74 14 L 77 7 L 80 14 L 83 9 L 82 16 Z" fill="#fbbf24"/>
+            </svg>
+            <span class="honk-bubble">HONK!</span>
+          </div>
+          <div class="brand-info">
+            <span class="brand-name">GooseFocus <span class="badge-tag">🪿 2.0</span></span>
+            <span class="brand-sub">Thagoose Ecosystem</span>
+          </div>
+        </a>
+
+        <!-- Farm Quick Action Buttons -->
+        <div class="farm-quick-pills">
+          <button class="hud-pill-btn" id="feedGeeseBtn" title="โปรยเมล็ดพันธุ์เรียกฝูงห่าน">
+            🌾 โปรยอาหาร
+          </button>
+          <button class="hud-pill-btn" id="honkChorusBtn" title="สั่งให้ห่านทุกตัวร้อง Honk ประสานเสียง!">
+            📢 Honk! ทั้งฟาร์ม
+          </button>
+          <button class="hud-pill-btn" id="toggleWeatherBtn" title="เปิด/ปิดฝนตกในฟาร์ม">
+            🌧️ สภาพอากาศ
+          </button>
+        </div>
+      </div>
+
+      <!-- Top Center: Live Farm Status & Farmer Level Badge -->
+      <div class="hud-center-group">
+        <div class="farmer-status-pill" id="headerTierBadge">
+          <span class="tier-icon" id="headerTierIcon">🌾</span>
+          <div class="farmer-status-info">
+            <div class="status-title-row">
+              <span class="tier-name" id="headerTierTitle">Pond Caretaker</span>
+              <span class="farmer-lvl" id="headerFarmerLevel">Lv. 3</span>
+            </div>
+            <div class="mini-exp-track">
+              <div class="mini-exp-fill" id="headerExpBar" style="width: 45%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Right: Icon Buttons (Ranking, Stats, Audio, Theme, Settings) -->
+      <div class="hud-right-group">
+        <!-- 🏆 Ranking Icon Button (Opens Modal) -->
+        <button class="hud-icon-btn highlight-gold" id="openRankingBtn" title="กระดานผู้นำ & ยศชาวไร่ห่าน (Ranking)">
+          <span class="btn-icon">🏆</span>
+          <span class="btn-badge" id="navRankBadge">#4</span>
+        </button>
+
+        <!-- 📊 Analytics / Heatmap Icon Button (Opens Modal) -->
+        <button class="hud-icon-btn" id="openAnalyticsBtn" title="สถิติความขยัน & Heatmap 364 วัน">
+          <span class="btn-icon">📊</span>
+        </button>
+
+        <!-- 🎧 Ambient Sound Mixer Button -->
+        <button class="hud-icon-btn" id="openAudioModalBtn" title="เสียงสังเคราะห์บรรยากาศ (ฝนตก, สระน้ำ, ลมเย็น)">
+          <span class="btn-icon">🎧</span>
+          <span class="btn-pulse-dot" id="audioPlayingDot"></span>
+        </button>
+
+        <!-- ☀️ Theme Switcher Dropdown -->
+        <div class="theme-dropdown-wrap">
+          <button class="hud-icon-btn" id="themeToggleBtn" title="เปลี่ยนบรรยากาศฟาร์ม">
+            <span class="btn-icon" id="themeIcon">☀️</span>
+          </button>
+          <div class="dropdown-menu theme-menu" id="themeDropdownMenu">
+            <button class="theme-option active" data-theme="day">☀️ กลางวันสดใส (Day)</button>
+            <button class="theme-option" data-theme="sunset">🌅 พระอาทิตย์ตก (Sunset)</button>
+            <button class="theme-option" data-theme="night">🌙 ค่ำคืนหิ่งห้อย (Night)</button>
+            <button class="theme-option" data-theme="cosmic">🌌 จักรวาลคอสมิก (Cosmic)</button>
+          </div>
+        </div>
+
+        <!-- ⚙️ Settings Button -->
+        <button class="hud-icon-btn" id="openSettingsBtn" title="ตั้งค่าระบบ & แบ็กอัปข้อมูล">
+          <span class="btn-icon">⚙️</span>
+        </button>
+      </div>
+
+    </header>
+
+
+    <!-- ============================================== -->
+    <!-- 3. FLOATING BOTTOM FOCUS CONTROLLER (Streamlined) -->
+    <!-- ============================================== -->
+    <div class="floating-bottom-focus-bar">
+      
+      <!-- Tag / Category Selector Pill -->
+      <div class="tag-selector-pill">
+        <span class="tag-pill-label">กำลังทำ:</span>
+        <div class="tag-chips-scroll" id="tagsContainer">
+          <button class="mini-tag-chip active" data-tag="coding">💻 โค้ดดิ่ง</button>
+          <button class="mini-tag-chip" data-tag="study">📚 อ่านหนังสือ</button>
+          <button class="mini-tag-chip" data-tag="thesis">🎓 ทำวิจัย</button>
+          <button class="mini-tag-chip" data-tag="work">💼 ทำงาน</button>
+          <button class="mini-tag-chip" data-tag="writing">✍️ เขียนงาน</button>
+        </div>
+      </div>
+
+      <!-- Main Focus Timer & Controls Center -->
+      <div class="timer-center-pill">
+        
+        <!-- Live Stopwatch / Accumulating Hours Digits -->
+        <div class="timer-digits-box" title="ชั่วโมงที่กำลังสะสมในรอบนี้">
+          <span class="timer-clock-icon">⏱️</span>
+          <span class="timer-digits-text" id="timerTimeDisplay">00:00:00</span>
+        </div>
+
+        <!-- Primary Start / Pause Action Button -->
+        <button class="btn-focus-action" id="timerMainActionBtn">
+          <span class="action-icon" id="mainActionIcon">▶</span>
+          <span class="action-text" id="mainActionText">เริ่มโฟกัส (Start)</span>
+        </button>
+
+        <!-- Reset Button -->
+        <button class="btn-focus-reset" id="timerResetBtn" title="รีเซ็ตเวลารอบนี้">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <!-- Daily Stats Chips -->
+      <div class="daily-stats-pill">
+        <div class="stat-pill-item" title="ชั่วโมงโฟกัสสะสมทั้งหมด">
+          <span class="stat-icon">⏱️</span>
+          <span class="stat-val" id="headerTotalHours">8.5h</span>
+        </div>
+        <div class="stat-pill-item text-gold" title="ขนนกทองคำที่สะสมได้">
+          <span class="stat-icon">🪶</span>
+          <span class="stat-val" id="headerFeathers">120</span>
+        </div>
+        <div class="stat-pill-item text-emerald" title="จำนวนห่านในฟาร์ม">
+          <span class="stat-icon">🪿</span>
+          <span class="stat-val" id="headerGeeseCount">4</span>
+        </div>
+        <div class="stat-pill-item text-orange" title="Streak โฟกัสต่อเนื่อง">
+          <span class="stat-icon">🔥</span>
+          <span class="stat-val" id="farmCurrentStreak">5 วัน</span>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ============================================== -->
+    <!-- 4. MODALS & POPUPS                             -->
+    <!-- ============================================== -->
+
+    <!-- Modal 1: 🏆 Ranking & Leaderboard Modal -->
+    <div class="modal-backdrop hidden" id="rankingModal">
+      <div class="modal-card ranking-modal-card">
+        <div class="modal-header">
+          <div class="modal-header-title-group">
+            <h3 class="modal-title">🏆 กระดานผู้นำ & ยศชาวไร่ห่าน (Ranking)</h3>
+            <p class="modal-subtitle">แข่งขันสะสมชั่วโมงโฟกัสกับเพื่อนชาวไร่ห่านใน Ecosystem</p>
+          </div>
+          <button class="modal-close-btn" data-close-modal="rankingModal">✕</button>
+        </div>
+
+        <div class="modal-body ranking-modal-body">
+          
+          <!-- Filter Tabs -->
+          <div class="leaderboard-filter-tabs">
+            <button class="filter-tab active" data-filter="daily">รายวัน (Today)</button>
+            <button class="filter-tab" data-filter="weekly">สัปดาห์นี้ (Weekly)</button>
+            <button class="filter-tab" data-filter="alltime">ตลอดกาล (All-Time)</button>
+          </div>
+
+          <!-- Top 3 Podium -->
+          <div class="podium-container" id="leaderboardPodium"></div>
+
+          <!-- Leaderboard Table -->
+          <div class="leaderboard-table-wrap">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th class="th-rank">อันดับ</th>
+                  <th class="th-user">ชาวไร่ห่าน</th>
+                  <th class="th-tier">ยศ</th>
+                  <th class="th-geese">ฝูงห่าน</th>
+                  <th class="th-hours">ชั่วโมงโฟกัส</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboardTableBody"></tbody>
+            </table>
+          </div>
+
+          <!-- My Rank Sticky Bar -->
+          <div class="my-rank-sticky-bar" id="myRankStickyBar">
+            <div class="my-rank-pos">#4</div>
+            <div class="my-rank-avatar">🪿</div>
+            <div class="my-rank-info">
+              <div class="my-rank-name">คุณ (Farmer You) <span class="badge-you">YOU</span></div>
+              <div class="my-rank-sub">Tier 2: Pond Caretaker</div>
+            </div>
+            <div class="my-rank-hours" id="myRankHoursDisplay">8.5 ชม.</div>
+          </div>
+
+          <!-- Farmer Tier Progression Track -->
+          <div class="ranking-tier-section">
+            <h4 class="section-subtitle">🌾 ลำดับยศชาวไร่ห่าน (Farmer Tiers Progression)</h4>
+            <div class="tiers-roadmap-track" id="tiersRoadmapTrack"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Modal 2: 📊 Analytics & Heatmap Modal -->
+    <div class="modal-backdrop hidden" id="analyticsModal">
+      <div class="modal-card analytics-modal-card">
+        <div class="modal-header">
+          <div class="modal-header-title-group">
+            <h3 class="modal-title">📊 สถิติฟาร์ม & ปฏิทินความขยัน (Farm Analytics)</h3>
+            <p class="modal-subtitle">บันทึกชั่วโมงโฟกัสและทุ่งหญ้าเขียวขจีตลอดทั้งปี</p>
+          </div>
+          <button class="modal-close-btn" data-close-modal="analyticsModal">✕</button>
+        </div>
+
+        <div class="modal-body">
+          
+          <!-- KPI Metrics Row -->
+          <div class="kpi-cards-row">
+            <div class="kpi-card">
+              <div class="kpi-icon-box bg-emerald">⏱️</div>
+              <div class="kpi-info">
+                <span class="kpi-title">โฟกัสสะสมทั้งหมด</span>
+                <span class="kpi-value" id="kpiTotalHours">8.5 ชั่วโมง</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon-box bg-amber">🔥</div>
+              <div class="kpi-info">
+                <span class="kpi-title">Focus Streak</span>
+                <span class="kpi-value" id="kpiCurrentStreak">5 วันต่อเนื่อง</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon-box bg-blue">🪿</div>
+              <div class="kpi-info">
+                <span class="kpi-title">ห่านที่ฟักสำเร็จ</span>
+                <span class="kpi-value" id="kpiHatchedGeese">4 ตัว</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon-box bg-purple">🪶</div>
+              <div class="kpi-info">
+                <span class="kpi-title">ขนนกทองคำ</span>
+                <span class="kpi-value" id="kpiTotalFeathers">120 🪶</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Heatmap -->
+          <div class="heatmap-section">
+            <div class="heatmap-header-row">
+              <h4 class="section-subtitle">🌾 Activity Heatmap (364 วัน)</h4>
+              <div class="heatmap-legend">
+                <span>น้อย</span>
+                <span class="legend-cell level-0"></span>
+                <span class="legend-cell level-1"></span>
+                <span class="legend-cell level-2"></span>
+                <span class="legend-cell level-3"></span>
+                <span class="legend-cell level-4"></span>
+                <span>มาก</span>
+              </div>
+            </div>
+            <div class="heatmap-scroll-wrap">
+              <div class="heatmap-grid" id="heatmapGrid"></div>
+            </div>
+          </div>
+
+          <!-- Tag Distribution & History -->
+          <div class="analytics-split-row">
+            <div class="tag-dist-box">
+              <h4 class="section-subtitle">🏷️ สัดส่วนกิจกรรม</h4>
+              <div class="tag-bars-list" id="tagBreakdownList"></div>
+            </div>
+            <div class="history-box">
+              <div class="card-header-with-action">
+                <h4 class="section-subtitle">📜 ประวัติรอบโฟกัส</h4>
+                <button class="btn-secondary-sm" id="openShareStoryBtn">📸 การ์ดแชร์ Story</button>
+              </div>
+              <div class="history-table-wrap">
+                <div class="history-list" id="historySessionsList"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Modal 3: 🎧 Ambient Sound Mixer Modal -->
+    <div class="modal-backdrop hidden" id="audioModal">
+      <div class="modal-card audio-mixer-modal">
+        <div class="modal-header">
+          <h3 class="modal-title">🎧 สังเคราะห์เสียงบรรยากาศ (Web Audio Synthesizer)</h3>
+          <button class="modal-close-btn" data-close-modal="audioModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-subtitle">เสียงทั้งหมดถูกสังเคราะห์สดผ่าน Web Audio API โดยไม่ต้องดาวน์โหลดไฟล์</p>
+
+          <div class="mixer-channels-list">
+            <!-- Channel 1: Farm Rain -->
+            <div class="mixer-channel">
+              <div class="channel-info">
+                <span class="channel-icon">🌧️</span>
+                <span class="channel-title">ฝนตกในฟาร์ม (Farm Rain)</span>
+              </div>
+              <input type="range" class="channel-slider" id="volRain" min="0" max="100" value="0">
+              <span class="channel-vol-label" id="labelVolRain">0%</span>
+            </div>
+
+            <!-- Channel 2: Pond Stream -->
+            <div class="mixer-channel">
+              <div class="channel-info">
+                <span class="channel-icon">🌊</span>
+                <span class="channel-title">ลำธารสระน้ำ (Goose Stream)</span>
+              </div>
+              <input type="range" class="channel-slider" id="volPond" min="0" max="100" value="0">
+              <span class="channel-vol-label" id="labelVolPond">0%</span>
+            </div>
+
+            <!-- Channel 3: Night Crickets & Breeze -->
+            <div class="mixer-channel">
+              <div class="channel-info">
+                <span class="channel-icon">🌲</span>
+                <span class="channel-title">ลมพัด & จิ้งหรีด (Night Breeze)</span>
+              </div>
+              <input type="range" class="channel-slider" id="volCrickets" min="0" max="100" value="0">
+              <span class="channel-vol-label" id="labelVolCrickets">0%</span>
+            </div>
+
+            <!-- Channel 4: Pink Noise / Deep Focus -->
+            <div class="mixer-channel">
+              <div class="channel-info">
+                <span class="channel-icon">🎶</span>
+                <span class="channel-title">Pink Noise คลื่นสมาธิ</span>
+              </div>
+              <input type="range" class="channel-slider" id="volPinkNoise" min="0" max="100" value="0">
+              <span class="channel-vol-label" id="labelVolPinkNoise">0%</span>
+            </div>
+          </div>
+
+          <div class="modal-actions-row">
+            <button class="btn-secondary" id="muteAllAudioBtn">🔇 ปิดเสียงทั้งหมด</button>
+            <button class="btn-primary" data-close-modal="audioModal">✓ เรียบร้อย</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Modal 4: 💤 AFK Idle Detected (10+ Minutes Stillness) -->
+    <div class="modal-backdrop hidden" id="idleModal">
+      <div class="modal-card idle-modal">
+        <div class="modal-body text-center" style="padding: 2rem 1.5rem; text-align: center;">
+          <div class="idle-mascot-anim" style="font-size: 3.5rem; margin-bottom: 0.5rem; animation: floatMascot 3s ease-in-out infinite;">
+            💤🪿
+          </div>
+          <h2 class="modal-title" style="font-size: 1.3rem; margin-bottom: 0.35rem;">เมาส์ไม่ขยับเกิน 10 นาที (AFK Paused)</h2>
+          <p class="modal-subtitle" id="idleModalDesc" style="font-size: 0.88rem; color: var(--text-secondary); max-width: 380px; margin: 0 auto 1.25rem; line-height: 1.5;">
+            ตรวจพบเมาส์และหน้าจอไม่ขยับเกิน 10 นาที ระบบหยุดเวลานับชั่วคราวให้คุณเรียบร้อยแล้ว เพื่อความแม่นยำของสถิติโฟกัส
+          </p>
+          <div class="modal-actions-row" style="justify-content: center; gap: 0.75rem;">
+            <button class="btn-primary" id="idleResumeBtn" style="padding: 0.65rem 1.4rem; font-size: 0.9rem;">
+              ▶️ ฉันกลับมาแล้ว ทำงานต่อ (Resume)
+            </button>
+            <button class="btn-secondary" data-close-modal="idleModal">
+              ⏸️ พักไว้ก่อน
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Modal 5: 📸 Share Story Focus Card Modal -->
+    <div class="modal-backdrop hidden" id="shareCardModal">
+      <div class="modal-card share-card-modal">
+        <div class="modal-header">
+          <h3 class="modal-title">📸 การ์ดสรุปผลงานชาวห่าน (Focus Story Card)</h3>
+          <button class="modal-close-btn" data-close-modal="shareCardModal">✕</button>
+        </div>
+        <div class="modal-body text-center">
+          <div class="story-preview-container">
+            <canvas id="storyShareCanvas" width="600" height="800"></canvas>
+          </div>
+          <div class="modal-actions-row" style="margin-top: 1rem;">
+            <button class="btn-primary" id="downloadStoryCardBtn">
+              💾 บันทึกรูปภาพ (Download Image)
+            </button>
+            <button class="btn-secondary" data-close-modal="shareCardModal">ปิด</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Modal 6: ⚙️ Settings & Backup Modal -->
+    <div class="modal-backdrop hidden" id="settingsModal">
+      <div class="modal-card settings-modal">
+        <div class="modal-header">
+          <h3 class="modal-title">⚙️ ตั้งค่าระบบ & แบ็กอัปข้อมูล (Settings)</h3>
+          <button class="modal-close-btn" data-close-modal="settingsModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="settings-section">
+            <h4 class="settings-subtitle">🔔 เสียง & การแจ้งเตือน</h4>
+            <label class="toggle-control">
+              <input type="checkbox" id="settingSoundEffects" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">เสียงเอฟเฟกต์ & เสียง Honk เมื่อจบเวลา</span>
+            </label>
+            <label class="toggle-control">
+              <input type="checkbox" id="settingDesktopNotify" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">ส่งการแจ้งเตือน Browser Notification</span>
+            </label>
+          </div>
+
+          <div class="settings-section">
+            <h4 class="settings-subtitle">💾 จัดการข้อมูล & สำรองไฟล์ (Backup / Restore)</h4>
+            <p class="settings-help">ดาวน์โหลดไฟล์ JSON เพื่อนำข้อมูลไปเปิดในคอมพิวเตอร์เครื่องอื่น</p>
+            <div class="settings-btn-row">
+              <button class="btn-secondary" id="exportDataBtn">📥 Export ข้อมูล (JSON)</button>
+              <label class="btn-secondary btn-file-label">
+                📤 Import นำเข้าไฟล์
+                <input type="file" id="importDataInput" accept=".json" style="display: none;">
+              </label>
+              <button class="btn-danger-sm" id="resetAllDataBtn">🗑️ ล้างข้อมูลใหม่</button>
+            </div>
+          </div>
+
+          <div class="modal-actions-row">
+            <button class="btn-primary" id="saveSettingsBtn">บันทึกการตั้งค่า</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
