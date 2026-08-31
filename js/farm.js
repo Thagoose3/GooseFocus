@@ -135,33 +135,123 @@ export class FarmSimulator {
   }
 
   setupEventListeners() {
+    this.potentialDragGoose = null;
+    this.draggedGoose = null;
+    this.dragOffset = { x: 0, y: 0 };
+    this.isDragging = false;
+    this.pointerDownPos = { x: 0, y: 0 };
+
     this.canvas.addEventListener('pointerdown', (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
 
+      this.pointerDownPos = { x: clickX, y: clickY };
+      this.isDragging = false;
+
       let clickedGoose = null;
       for (const goose of this.geese) {
         const dist = Math.hypot(goose.x - clickX, goose.y - clickY);
-        if (dist < 45 * goose.scale) {
+        if (dist < 46 * goose.scale) {
           clickedGoose = goose;
           break;
         }
       }
 
-      if (clickedGoose) {
+      if (clickedGoose && clickedGoose.stage !== 'egg') {
+        this.potentialDragGoose = clickedGoose;
+        this.dragOffset = { x: clickedGoose.x - clickX, y: clickedGoose.y - clickY };
+      } else if (clickedGoose && clickedGoose.stage === 'egg') {
         this.interactWithGoose(clickedGoose);
       } else {
         this.createRipple(clickX, clickY);
         this.geese.forEach(g => {
           if (g.stage !== 'egg' && Math.random() > 0.3) {
-            // Find closest walkable point near click
             const target = this.findNearestWalkable(clickX + (Math.random() * 60 - 30), clickY + (Math.random() * 60 - 30));
             g.targetX = target.x;
             g.targetY = target.y;
             g.state = 'wandering';
           }
         });
+      }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!this.canvas) return;
+      const rect = this.canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      if (this.potentialDragGoose && !this.isDragging) {
+        if (Math.hypot(clickX - this.pointerDownPos.x, clickY - this.pointerDownPos.y) > 6) {
+          this.isDragging = true;
+          this.draggedGoose = this.potentialDragGoose;
+          this.draggedGoose.isBeingHeld = true;
+          this.draggedGoose.state = 'held';
+          this.draggedGoose.targetX = null;
+          this.draggedGoose.targetY = null;
+          this.canvas.style.cursor = 'grabbing';
+          soundEngine.playHonk(1.4);
+          this.addSpeechBubble(this.draggedGoose.x, this.draggedGoose.y - 50, 'ว๊ายยย! ยกข้ามกำแพง 🪿✨');
+        }
+      }
+
+      if (this.draggedGoose) {
+        this.draggedGoose.x = Math.max(30, Math.min(this.width - 30, clickX + this.dragOffset.x));
+        this.draggedGoose.y = Math.max(140, Math.min(this.height - 60, clickY + this.dragOffset.y));
+        this.draggedGoose.wingAngle = Math.sin(this.timeTick * 0.8) * 0.9;
+      }
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      if (this.isDragging && this.draggedGoose) {
+        const inPond = this.isPointInPond(this.draggedGoose.x, this.draggedGoose.y);
+
+        if (inPond) {
+          this.draggedGoose.state = 'swimming';
+          this.createRipple(this.draggedGoose.x, this.draggedGoose.y);
+          this.createRipple(this.draggedGoose.x, this.draggedGoose.y + 12);
+          this.addSpeechBubble(this.draggedGoose.x, this.draggedGoose.y - 45, 'ต๋อม! 💦 ว่ายน้ำสบายใจ');
+          soundEngine.playClick();
+        } else {
+          this.draggedGoose.state = 'wandering';
+          this.addSpeechBubble(this.draggedGoose.x, this.draggedGoose.y - 45, 'ตุ้บ! 🪿 ข้ามกำแพงสำเร็จ!');
+          soundEngine.playHonk(1.0);
+
+          // Landing dust puff
+          for (let i = 0; i < 5; i++) {
+            this.particles.push({
+              x: this.draggedGoose.x + (Math.random() * 20 - 10),
+              y: this.draggedGoose.y + 10,
+              vx: (Math.random() - 0.5) * 2,
+              vy: -Math.random() * 1.5 - 0.5,
+              life: 30,
+              maxLife: 30,
+              type: 'feather',
+              color: '#d97706'
+            });
+          }
+        }
+
+        this.draggedGoose.isBeingHeld = false;
+        this.draggedGoose = null;
+        this.potentialDragGoose = null;
+        this.isDragging = false;
+        this.canvas.style.cursor = 'default';
+      } else if (this.potentialDragGoose) {
+        this.interactWithGoose(this.potentialDragGoose);
+        this.potentialDragGoose = null;
+        this.isDragging = false;
+      }
+    });
+
+    window.addEventListener('pointercancel', () => {
+      if (this.draggedGoose) {
+        this.draggedGoose.isBeingHeld = false;
+        this.draggedGoose = null;
+        this.potentialDragGoose = null;
+        this.isDragging = false;
+        this.canvas.style.cursor = 'default';
       }
     });
   }
@@ -1337,7 +1427,8 @@ export class FarmSimulator {
 
     const isSwimming = g.state === 'swimming';
     const isSleeping = g.state === 'sleeping';
-    const bob = isSwimming ? Math.sin(g.wobble) * 2.5 : Math.abs(Math.sin(g.wobble)) * 2;
+    const isHeld = g.isBeingHeld;
+    const bob = isHeld ? -18 + Math.sin(this.timeTick * 0.4) * 2 : (isSwimming ? Math.sin(g.wobble) * 2.5 : Math.abs(Math.sin(g.wobble)) * 2);
 
     // Palette per Skin
     let bodyColor = '#ffffff';
@@ -1362,31 +1453,39 @@ export class FarmSimulator {
       legColor = '#c2410c';
     }
 
-    // 1. Soft Ground Shadow
-    if (!isSwimming) {
+    // 1. Ground Shadow
+    if (isHeld) {
+      // Ground shadow stays down while goose is lifted in air
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
+      ctx.beginPath();
+      ctx.ellipse(0, 24, 15, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (!isSwimming) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
       ctx.beginPath();
       ctx.ellipse(0, 18, 18, 7, 0, 0, Math.PI * 2);
       ctx.fill();
+    }
 
-      // 2. Animated Orange Webbed Feet
-      const legStep = Math.sin(g.stepPhase) * 6;
+    // 2. Animated Orange Webbed Feet
+    if (!isSwimming) {
+      const legStep = isHeld ? Math.sin(this.timeTick * 0.5) * 8 : Math.sin(g.stepPhase) * 6;
       ctx.fillStyle = legColor;
 
       // Left Foot
-      ctx.fillRect(-6 + legStep, 10, 3.5, 9);
+      ctx.fillRect(-6 + legStep, bob + 10, 3.5, 9);
       ctx.beginPath();
-      ctx.moveTo(-8 + legStep, 19);
-      ctx.lineTo(-2 + legStep, 19);
-      ctx.lineTo(-5 + legStep, 15);
+      ctx.moveTo(-8 + legStep, bob + 19);
+      ctx.lineTo(-2 + legStep, bob + 19);
+      ctx.lineTo(-5 + legStep, bob + 15);
       ctx.fill();
 
       // Right Foot
-      ctx.fillRect(4 - legStep, 10, 3.5, 9);
+      ctx.fillRect(4 - legStep, bob + 10, 3.5, 9);
       ctx.beginPath();
-      ctx.moveTo(2 - legStep, 19);
-      ctx.lineTo(8 - legStep, 19);
-      ctx.lineTo(5 - legStep, 15);
+      ctx.moveTo(2 - legStep, bob + 19);
+      ctx.lineTo(8 - legStep, bob + 19);
+      ctx.lineTo(5 - legStep, bob + 15);
       ctx.fill();
     } else {
       // Swimming Water Wake Ring
