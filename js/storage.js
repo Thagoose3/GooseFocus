@@ -127,16 +127,41 @@ class StateStore {
       // Check level up (every 100 EXP = 1 Level)
       s.farmer.level = Math.floor(s.farmer.exp / 100) + 1;
 
-      // Update hatching progress for incubating eggs
+      // Update hatching progress for incubating eggs & grow goslings
+      let hasEgg = false;
+      const gooseNames = ['Pip', 'Nugget', 'Waddle', 'Pebble', 'Butter', 'Daisy', 'Mochi', 'Pudding', 'Cosmo', 'Barnaby'];
+
       s.geeseList.forEach(g => {
         if (g.stage === 'egg') {
-          g.progress = (g.progress || 0) + Math.min(50, Math.floor(session.durationMinutes * 1.5));
+          hasEgg = true;
+          g.progress = (g.progress || 0) + Math.min(60, Math.max(15, Math.floor(session.durationMinutes * 1.6)));
           if (g.progress >= 100) {
             g.stage = 'gosling';
             g.hatchedAt = new Date().toISOString();
           }
+        } else if (g.stage === 'gosling') {
+          // Gosling grows into Adult after 30+ minutes of focus
+          g.growthMinutes = (g.growthMinutes || 0) + (session.durationMinutes || 0);
+          if (g.growthMinutes >= 30) {
+            g.stage = 'adult';
+          }
         }
       });
+
+      // If no egg is incubating, lay a fresh egg in the nest!
+      if (!hasEgg) {
+        const nextIndex = s.geeseList.length + 1;
+        const randomName = gooseNames[Math.floor(Math.random() * gooseNames.length)] + ` #${nextIndex}`;
+        s.geeseList.push({
+          id: `goose_${Date.now()}`,
+          name: randomName,
+          stage: 'egg',
+          progress: 0,
+          hat: 'none',
+          glasses: 'none',
+          skin: 'classic_white'
+        });
+      }
 
       // Update streak
       const today = new Date().toISOString().split('T')[0];

@@ -258,8 +258,38 @@ export class FarmSimulator {
 
   interactWithGoose(goose) {
     if (goose.stage === 'egg') {
-      soundEngine.playClick();
-      this.addSpeechBubble(goose.x, goose.y - 30, `🥚 ฟักแล้ว ${goose.progress || 0}%`);
+      if ((goose.progress || 0) >= 100) {
+        // Hatch the egg!
+        soundEngine.playFanfare();
+        goose.stage = 'gosling';
+        goose.scale = 0.75;
+        goose.state = 'honking';
+        goose.stateTimer = 60;
+        this.addSpeechBubble(goose.x, goose.y - 35, '🐣 กะเทาะเปลือกแล้ว! ยินดีต้อนรับลูกห่านตัวใหม่!');
+        store.update(s => {
+          const targetG = s.geeseList.find(item => item.id === goose.id);
+          if (targetG) {
+            targetG.stage = 'gosling';
+            targetG.hatchedAt = new Date().toISOString();
+          }
+        });
+        // Confetti explosion
+        for (let i = 0; i < 16; i++) {
+          this.particles.push({
+            x: goose.x,
+            y: goose.y - 15,
+            vx: (Math.random() - 0.5) * 4.5,
+            vy: -Math.random() * 3.5 - 1.5,
+            life: 60,
+            maxLife: 60,
+            type: 'feather',
+            color: ['#fbbf24', '#fde047', '#ffffff', '#38bdf8'][Math.floor(Math.random() * 4)]
+          });
+        }
+      } else {
+        soundEngine.playClick();
+        this.addSpeechBubble(goose.x, goose.y - 30, `🥚 ไข่ห่านทองคำ (${goose.progress || 0}%) • โฟกัสต่อเพื่อฟัก! 🐣`);
+      }
       return;
     }
 
